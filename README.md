@@ -15,3 +15,16 @@ It runs on a Raspberry Pi Pico chip. To start working on an exploit for your dev
 5. Solder the MOSFET on the second board, and redo the parameter tuning, and re-run `exploit.py`. This is best done in a tmux session, since it will take a long time.
 
 I used the IRLML6246TRPBF MOSFET, but other fast N-channel MOSFETs should also work.
+
+## Build instructions
+
+Install [pico-sdk](https://github.com/raspberrypi/pico-sdk). Then clone the repo and run the following commands:
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+
+To flash the firmware, connect the board and copy the `.uf2` file to the board.
