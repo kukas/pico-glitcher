@@ -8,7 +8,7 @@ import datetime
 # glitch calculated at 130 and 690 us
 
 # bound = 33520
-bound = 178003
+step = 1
 run_distance = 75
 
 start_pulse_width = 6
@@ -80,10 +80,10 @@ error_ctr = Counter()
 start_datetime = datetime.datetime.now()
 
 
-def middle_out(middle, amount):
+def middle_out(middle, amount, step):
     total = 2*amount - 1
     yield (0, middle)
-    for offset in range(1, amount):
+    for offset in range(1, amount, step):
         yield ((2*offset + 1) / total, middle + offset)
         yield ((2*offset + 2) / total, middle - offset)
 
@@ -109,7 +109,7 @@ with serial.Serial('/dev/ttyACM0', 115200) as ser:
         pulse_work = end_pulse_width - start_pulse_width
         pulse_progress = (pulse_width - start_pulse_width) / pulse_work
         middle_out_work = run_distance*2+1
-        for middle_out_progress, offset in middle_out(bound, run_distance):
+        for middle_out_progress, offset in middle_out(bound, run_distance, step):
             ser.write(b'd')
             pulse = generate_waveform(glitch_size_bytes, (offset, pulse_width))
             ser.write(pulse)
