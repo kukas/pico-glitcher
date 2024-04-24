@@ -4,6 +4,7 @@ import signal
 import sys
 from collections import Counter
 import datetime
+import struct
 
 # glitch calculated at 130 and 690 us
 
@@ -94,6 +95,23 @@ def signal_handler(sig, frame):
 
 signal.signal(signal.SIGINT, signal_handler)
 
+def update_waveform(ser, glitch_size_bytes, offset, pulse_width):
+    ser.write(b'd')
+    pulse = generate_waveform(glitch_size_bytes, (offset, pulse_width))
+    for i in range(0, len(pulse), 4):
+        b = struct.unpack('>I', pulse[i:i+4])[0]
+        if b != 0:
+            ser.write(struct.pack('>I', i//4))
+            ser.write(pulse[i:i+4])
+    ser.write(struct.pack('>I', 999999))
+    response = ser.read_until(b'.')
+    assert response == b'd.', response
+
+def glitch(ser):
+    ser.write(b'g')
+    response = ser.read(5)
+    return response
+
 with serial.Serial('/dev/ttyACM0', 115200) as ser:
     ser.write(b's')
     glitch_size_bytes = int(ser.read_until(b'.')[:-1]) * 4
@@ -110,14 +128,9 @@ with serial.Serial('/dev/ttyACM0', 115200) as ser:
         pulse_progress = (pulse_width - start_pulse_width) / pulse_work
         middle_out_work = run_distance*2+1
         for middle_out_progress, offset in middle_out(bound, run_distance, step):
-            ser.write(b'd')
-            pulse = generate_waveform(glitch_size_bytes, (offset, pulse_width))
-            ser.write(pulse)
-            response = ser.read_until(b'.')
-            assert response == b'd.', response
+            update_waveform(ser, glitch_size_bytes, offset, pulse_width)
             for i in range(trials):
-                ser.write(b'g')
-                response = ser.read(5)
+                response = glitch(ser)
                 if response[1] == 0xb2 or response[3] == 0xb2:
                     successes.append(f'{offset} {pulse_width}: {response}')
                     success_ctr[(offset, pulse_width)] += 1

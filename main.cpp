@@ -1,3 +1,4 @@
+#include <string.h>
 #include <stdio.h>
 #include "pico/stdlib.h"
 #include "pico/multicore.h"
@@ -5,8 +6,6 @@
 #include "hardware/sync.h"
 #include "cc_interface.h"
 #include "pio_serialiser.pio.h"
-
-
 
 // these pin numbers are the GP.. numbers, not the numbers on the PCB
 
@@ -98,8 +97,18 @@ void core1_entry() { // the main() function on the second core
             break;
         }
         case 'd': { // set glitch data
-            for (uint i = 0; i < GLITCH_BUFFER_SIZE; i++) {
+            memset(wavetable, 0, sizeof(wavetable));
+            uint32_t i = 0;
                 uint32_t entry = 0;
+            while (i < GLITCH_BUFFER_SIZE) {
+                i = 0;
+                entry = 0;
+                for (uint j = 0; j < 4; j++) {
+                    int read = getchar_timeout_us(0);
+                    while (read < 0) {read = getchar_timeout_us(0);}
+                    i = (i << 8) | ((uint8_t) read);
+                }
+                if (i >= GLITCH_BUFFER_SIZE) break;
                 for (uint j = 0; j < 4; j++) {
                     int read = getchar_timeout_us(0);
                     while (read < 0) {read = getchar_timeout_us(0);}
