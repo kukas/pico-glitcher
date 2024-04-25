@@ -8,13 +8,19 @@ import struct
 
 # glitch calculated at 130 and 690 us
 
-# bound = 33520
+bound = 32775
 step = 1
-run_distance = 75
+run_distance = 100
+start_pulse_width = 8
+end_pulse_width = 15
+trials = 100
 
-start_pulse_width = 6
-end_pulse_width = 7 # not inclusive
-trials = 10000
+# bound = 172799
+# step = 1
+# run_distance = 100
+# start_pulse_width = 8
+# end_pulse_width = 16
+# trials = 100
 
 class BitArray:
     def __init__(self, size):
@@ -73,14 +79,6 @@ def generate_waveform(array_size: int, *args):
     # return bytearray([0xff]*array_size)
     return bitarray.bytearray
 
-start = time.time()
-successes = []
-success_ctr = Counter()
-error_ctr = Counter()
-
-start_datetime = datetime.datetime.now()
-
-
 def middle_out(middle, amount, step):
     total = 2*amount - 1
     yield (0, middle)
@@ -93,11 +91,9 @@ def signal_handler(sig, frame):
     print(f'{success_ctr=}')
     sys.exit(0)
 
-signal.signal(signal.SIGINT, signal_handler)
-
-def update_waveform(ser, glitch_size_bytes, offset, pulse_width):
+def update_waveform(ser, glitch_size_bytes, *locations):
     ser.write(b'd')
-    pulse = generate_waveform(glitch_size_bytes, (offset, pulse_width))
+    pulse = generate_waveform(glitch_size_bytes, *locations)
     for i in range(0, len(pulse), 4):
         b = struct.unpack('>I', pulse[i:i+4])[0]
         if b != 0:
@@ -112,33 +108,44 @@ def glitch(ser):
     response = ser.read(5)
     return response
 
-with serial.Serial('/dev/ttyACM0', 115200) as ser:
-    ser.write(b's')
-    glitch_size_bytes = int(ser.read_until(b'.')[:-1]) * 4
-    print(f'Glitch buffer size = {glitch_size_bytes}')
+if __name__ == '__main__':
 
-    ser.write(b'a')
-    ser.write([0x63, 0xE0, 0x42, 0x04]) # XOR 0x42 in acc, then increment it
-    # if we have a succesful first glitch, we expect acc to be 0x42
-    # if we have a succesful second glitch, we expect acc to be 0x01
-    assert ser.read(2) == b'a.'
+    start = time.time()
+    successes = []
+    success_ctr = Counter()
+    error_ctr = Counter()
 
-    for pulse_width in range(start_pulse_width, end_pulse_width):
-        pulse_work = end_pulse_width - start_pulse_width
-        pulse_progress = (pulse_width - start_pulse_width) / pulse_work
-        middle_out_work = run_distance*2+1
-        for middle_out_progress, offset in middle_out(bound, run_distance, step):
-            update_waveform(ser, glitch_size_bytes, offset, pulse_width)
-            for i in range(trials):
-                response = glitch(ser)
-                if response[1] == 0xb2 or response[3] == 0xb2:
-                    successes.append(f'{offset} {pulse_width}: {response}')
-                    success_ctr[(offset, pulse_width)] += 1
-                    print(f'SUCCESS: {response.hex()}')
-                global_progress = (((0.5+i)/trials) / middle_out_work + middle_out_progress) / pulse_work + pulse_progress
-                time_spent = (datetime.datetime.now() - start_datetime)
-                total_time_estimated = time_spent * 1/global_progress
-                print(response.hex(' '), f"success={success_ctr.total()} progress={global_progress*100:>6.2f}%, pw={pulse_width} [{' X'[response[1] == 0xb2]}] [{' X'[response[3] == 0xb2]}] elapsed={time_spent} eta={start_datetime + total_time_estimated}")
-            print(f'\npw = {pulse_width} offset = {offset}; {time.time() - start}')
-            print(successes)
-            print(success_ctr)
+    start_datetime = datetime.datetime.now()
+
+    signal.signal(signal.SIGINT, signal_handler)
+
+    with serial.Serial('/dev/ttyACM0', 115200) as ser:
+        ser.write(b's')
+        glitch_size_bytes = int(ser.read_until(b'.')[:-1]) * 4
+        print(f'Glitch buffer size = {glitch_size_bytes}')
+
+        ser.write(b'a')
+        ser.write([0x63, 0xE0, 0x42, 0x04]) # XOR 0x42 in acc, then increment it
+        # if we have a succesful first glitch, we expect acc to be 0x42
+        # if we have a succesful second glitch, we expect acc to be 0x01
+        assert ser.read(2) == b'a.'
+
+        for pulse_width in range(start_pulse_width, end_pulse_width):
+            pulse_work = end_pulse_width - start_pulse_width
+            pulse_progress = (pulse_width - start_pulse_width) / pulse_work
+            middle_out_work = run_distance*2+1
+            for middle_out_progress, offset in middle_out(bound, run_distance, step):
+                update_waveform(ser, glitch_size_bytes, (offset, pulse_width))
+                for i in range(trials):
+                    response = glitch(ser)
+                    if response[1] == 0xb2 or response[3] == 0xb2:
+                        successes.append(f'{offset} {pulse_width}: {response}')
+                        success_ctr[(offset, pulse_width)] += 1
+                        print(f'SUCCESS: {response.hex()}')
+                    global_progress = (((0.5+i)/trials) / middle_out_work + middle_out_progress) / pulse_work + pulse_progress
+                    time_spent = (datetime.datetime.now() - start_datetime)
+                    total_time_estimated = time_spent * 1/global_progress
+                    print(response.hex(' '), f"success={success_ctr.total()} progress={global_progress*100:>6.2f}%, pw={pulse_width} [{' X'[response[1] == 0xb2]}] [{' X'[response[3] == 0xb2]}] elapsed={time_spent} eta={start_datetime + total_time_estimated}")
+                print(f'\npw = {pulse_width} offset = {offset}; {time.time() - start}')
+                print(successes)
+                print(success_ctr)
