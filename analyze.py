@@ -98,14 +98,39 @@ import matplotlib.pyplot as plt
 # 10000 samples, 70 around 33750, pw=6
 # c = Counter({(33750, 6): 990, (33748, 6): 856, (33733, 6): 685, (33735, 6): 636, (33734, 6): 587, (33732, 6): 536, (33736, 6): 505, (33737, 6): 487, (33731, 6): 470, (33749, 6): 456, (33730, 6): 456, (33739, 6): 449, (33740, 6): 448, (33752, 6): 447, (33751, 6): 426, (33741, 6): 417, (33738, 6): 416, (33765, 6): 413, (33762, 6): 407, (33753, 6): 406, (33768, 6): 406, (33742, 6): 403, (33744, 6): 401, (33746, 6): 398, (33763, 6): 396, (33756, 6): 393, (33754, 6): 385, (33761, 6): 382, (33766, 6): 382, (33767, 6): 381, (33759, 6): 380, (33743, 6): 375, (33745, 6): 372, (33755, 6): 367, (33764, 6): 363, (33760, 6): 362, (33757, 6): 360, (33758, 6): 355, (33747, 6): 354, (33727, 6): 348, (33769, 6): 337, (33695, 6): 337, (33728, 6): 334, (33701, 6): 330, (33770, 6): 328, (33690, 6): 326, (33729, 6): 323, (33693, 6): 321, (33692, 6): 319, (33694, 6): 317, (33697, 6): 314, (33724, 6): 308, (33689, 6): 308, (33725, 6): 298, (33696, 6): 296, (33773, 6): 293, (33726, 6): 291, (33691, 6): 288, (33698, 6): 286, (33721, 6): 285, (33702, 6): 285, (33772, 6): 280, (33723, 6): 278, (33771, 6): 275, (33688, 6): 268, (33699, 6): 264, (33703, 6): 263, (33722, 6): 262, (33713, 6): 262, (33719, 6): 261, (33720, 6): 252, (33687, 6): 248, (33685, 6): 246, (33700, 6): 245, (33775, 6): 240, (33717, 6): 238, (33704, 6): 238, (33712, 6): 236, (33776, 6): 235, (33714, 6): 234, (33686, 6): 230, (33711, 6): 228, (33716, 6): 226, (33710, 6): 224, (33682, 6): 220, (33684, 6): 219, (33718, 6): 218, (33715, 6): 218, (33774, 6): 217, (33707, 6): 213, (33706, 6): 210, (33778, 6): 201, (33708, 6): 200, (33705, 6): 193, (33683, 6): 192, (33709, 6): 187, (33777, 6): 186, (33681, 6): 168, (33781, 6): 128, (33779, 6): 126, (33784, 6): 118, (33780, 6): 117, (33783, 6): 113, (33782, 6): 96, (33787, 6): 70, (33785, 6): 60, (33786, 6): 49, (33798, 6): 37, (33788, 6): 31, (33789, 6): 31, (33797, 6): 31, (33796, 6): 29, (33800, 6): 26, (33790, 6): 22, (33792, 6): 22, (33799, 6): 21, (33802, 6): 18, (33801, 6): 17, (33803, 6): 17, (33793, 6): 16, (33805, 6): 14, (33806, 6): 14, (33794, 6): 13, (33804, 6): 12, (33791, 6): 11, (33795, 6): 10, (33807, 6): 9, (33808, 6): 5, (33809, 6): 5, (33810, 6): 3, (33812, 6): 3, (33811, 6): 2})
 
-
-widths = {a for (t, a) in success_ctr.keys()}
+# focus on selected widths, if supplied on command line
+if len(sys.argv) > 1:
+    widths = [int(i) for i in sys.argv[1:]]
+else:
+    widths = {a for (t, a) in success_ctr.keys()}
 listitems = sorted(((location, width), amount) for ((location, width), amount) in success_ctr.items())
 
+# bar chart of number of successes per width
+# helps choosing the best width independent of location
+if len(widths) > 1:
+    widths_sorted = sorted(widths)
+    sums = [sum([amount for ((location, width), amount) in listitems if width == i]) for i in widths_sorted]
+    plt.bar(widths_sorted, sums, alpha=0.5)
+    plt.title("Number of overall successes per width")
+    plt.show()
+
+# histogram
+# for choosing the approximate location with sparse data
+for i in widths:
+    data = [[location]*amount for ((location, width), amount) in listitems if width == i]
+    data = [item for sublist in data for item in sublist]
+    plt.hist(data, label=str(i), alpha=0.5, bins=100)
+plt.title("Number of successes (histogram)")
+plt.legend()
+plt.show()
+
+# bar chart
+# for choosing the best location with more data
 for i in widths:
     a = [location for ((location, width), amount) in listitems if width == i]
     b = [amount for ((location, width), amount) in listitems if width == i]
     if a:
-        plt.bar(a, b, label=str(i))
+        plt.bar(a, b, label=str(i), alpha=0.5)
+plt.title("Number of successes (bar chart)")
 plt.legend()
 plt.show()
