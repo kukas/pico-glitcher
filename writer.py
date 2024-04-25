@@ -1,8 +1,4 @@
 import serial
-import time
-import signal
-import sys
-import struct
 
 # This script will write a pre-defined pattern to an unlocked microcontroller
 

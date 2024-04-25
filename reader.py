@@ -1,5 +1,4 @@
 import serial
-import struct
 
 # This scripts reads an (unprotected) chip
 
