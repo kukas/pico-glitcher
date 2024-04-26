@@ -15,7 +15,7 @@
 #define CCDEBUG_CLK 2
 #define CCDEBUG_DATA 3
 #define CCDEBUG_RESET 4
-#define POWER_PIN 16
+#define POWER_PIN 14
 
 // send a bit every PIO_SERIAL_CLKDIV clock cycles
 #define PIO_SERIAL_CLKDIV 1.f
