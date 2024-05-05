@@ -219,3 +219,15 @@ for i in widths:
 plt.title("Number of successes (bar chart)")
 plt.legend()
 plt.show()
+
+# heat map
+import seaborn as sns
+import pandas as pd
+
+succ = [{"location": location, "width": width, "amount": amount} for ((location, width), amount) in listitems]
+df = pd.DataFrame(succ)
+print(df)
+piv = pd.pivot_table(df, values="amount", index="location", columns="width", fill_value=0)
+print(piv)
+sns.heatmap(piv)
+plt.show()
