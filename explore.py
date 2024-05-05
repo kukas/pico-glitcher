@@ -11,8 +11,8 @@ import struct
 bound = 32775
 step = 1
 run_distance = 100
-start_pulse_width = 8
-end_pulse_width = 15
+pulses = [10, 11, 9, 12, 8, 13, 7, 6, 5, 4]
+
 trials = 100
 
 # bound = 172799
@@ -129,10 +129,9 @@ if __name__ == '__main__':
         # if we have a succesful first glitch, we expect acc to be 0x42
         # if we have a succesful second glitch, we expect acc to be 0x01
         assert ser.read(2) == b'a.'
-
-        for pulse_width in range(start_pulse_width, end_pulse_width):
-            pulse_work = end_pulse_width - start_pulse_width
-            pulse_progress = (pulse_width - start_pulse_width) / pulse_work
+        pulse_work = len(pulses)
+        for pulse_idx, pulse_width in enumerate(pulses):
+            pulse_progress = (pulse_idx + 1) / pulse_work
             middle_out_work = run_distance*2+1
             for middle_out_progress, offset in middle_out(bound, run_distance, step):
                 update_waveform(ser, glitch_size_bytes, (offset, pulse_width))
