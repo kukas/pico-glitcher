@@ -29,6 +29,9 @@ int dma_chan;
 // last entry will always be zero, to ensure the glitching mosfet is pulled low again
 static uint32_t wavetable[GLITCH_BUFFER_SIZE + 1] = {0};
 
+uint32_t delay_pre = 20000;
+uint32_t delay_post = 5000;
+
 void initial_setup_dma() {
     uint offset = pio_add_program(pio0, &pio_serialiser_program);
     pio_serialiser_program_init(pio0, 0, offset, GLITCH_PIN, PIO_SERIAL_CLKDIV);
@@ -50,7 +53,12 @@ void initial_setup_dma() {
 }
 
 void prepare_dma() {
-    dma_channel_set_read_addr(dma_chan, wavetable, false);
+    // Set the DMA initial read address.
+    dma_channel_set_read_addr(
+        dma_chan,
+        wavetable, // Initial read address of transfer.
+        false // True to start the transfer immediately
+    );
 }
 
 uint8_t opcodes[4] = {
@@ -99,7 +107,7 @@ void core1_entry() { // the main() function on the second core
         case 'd': { // set glitch data
             memset(wavetable, 0, sizeof(wavetable));
             uint32_t i = 0;
-                uint32_t entry = 0;
+            uint32_t entry = 0;
             while (i < GLITCH_BUFFER_SIZE) {
                 i = 0;
                 entry = 0;
@@ -129,12 +137,36 @@ void core1_entry() { // the main() function on the second core
             printf("a.");
             break;
         }
-
+        // case 'x': {
+        //     gpio_put(POWER_PIN, 0);
+        //     busy_wait_us(50);
+        //     gpio_put(POWER_PIN, 1);
+        //     busy_wait_us(50);
+        //     printf("x.");
+        //     break;
+        // }
+        case 'e': {
+            delay_pre = 0;
+            for (uint j = 0; j < 4; j++) {
+                int read = getchar_timeout_us(0);
+                while (read < 0) {read = getchar_timeout_us(0);}
+                delay_pre = (delay_pre << 8) | ((uint8_t) read);
+            }
+            delay_post = 0;
+            for (uint j = 0; j < 4; j++) {
+                int read = getchar_timeout_us(0);
+                while (read < 0) {read = getchar_timeout_us(0);}
+                delay_post = (delay_post << 8) | ((uint8_t) read);
+            }
+            printf("e.");
+            break;
+        }
         case 'g': { // glitch! (at 130 and 690 us)
             prepare_dma();
             uint32_t saved_interrupt_config = save_and_disable_interrupts();
             gpio_put(POWER_PIN, 1);
-            busy_wait_us(20000); // 20000 works, less sometimes isn't long enough for the chip to boot
+            // busy_wait_us(20000);
+            busy_wait_us(delay_pre); // 20000 works, less sometimes isn't long enough for the chip to boot
             // ^ this is a good place to optimize for time
             
             // START TIMING SENSITIVE SECTION
@@ -164,7 +196,7 @@ void core1_entry() { // the main() function on the second core
             // END TIMING SENSITIVE SECTION
 
             gpio_put(POWER_PIN, 0);
-            busy_wait_ms(5);
+            busy_wait_us(delay_post);
             restore_interrupts(saved_interrupt_config);
             putchar(first_result);
             putchar(first_status);

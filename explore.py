@@ -103,6 +103,13 @@ def update_waveform(ser, glitch_size_bytes, *locations):
     response = ser.read_until(b'.')
     assert response == b'd.', response
 
+def set_delays(ser, delay_pre, delay_post):
+    ser.write(b'e')
+    ser.write(struct.pack('>I', delay_pre))
+    ser.write(struct.pack('>I', delay_post))
+    response = ser.read_until(b'.')
+    assert response == b'e.', response
+
 def glitch(ser):
     ser.write(b'g')
     response = ser.read(5)
