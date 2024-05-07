@@ -23,7 +23,7 @@ class CC_interface
     void write_xdata_memory(uint16_t address, uint16_t len, uint8_t buffer[]);
     uint8_t write_code_memory(uint16_t address, uint8_t buffer[], int len);
     uint8_t WR_CONFIG(uint8_t config);
-    uint8_t WD_CONFIG();
+    uint8_t RD_CONFIG();
     void set_pc(uint16_t address);
     uint8_t set_lock_byte(uint8_t lock_byte);
     void read_code_memory(uint16_t address, uint16_t len, uint8_t buffer[]);

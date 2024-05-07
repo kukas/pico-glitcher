@@ -188,7 +188,7 @@ uint8_t CC_interface::WR_CONFIG(uint8_t config)
   return cc_receive_byte();
 }
 
-uint8_t CC_interface::WD_CONFIG()
+uint8_t CC_interface::RD_CONFIG()
 {
   cc_send_byte(0x24);
   return cc_receive_byte();
