@@ -76,6 +76,105 @@ void core1_entry() { // the main() function on the second core
             continue;
         }
         switch (c) {
+        case 'E': {
+            // erase the first page of flash, 
+            // optionally uncomment the WR_CONFIG to 
+            // try to erase the Flash Information Page instead
+
+            // confirmed to erase code from CODE memory space
+            // NOT YET confirmed to erase the Flash Information Page
+
+            gpio_put(POWER_PIN, 0);
+            busy_wait_ms(50);
+            gpio_put(POWER_PIN, 1);
+            busy_wait_ms(50);
+            cc.reset_cc();
+            cc.enable_cc_debug();
+            putchar(cc.send_cc_cmdS(0x34)); // get status
+            putchar(cc.opcode(0x00)); // execute NOP to update status byte of debugger
+            putchar(cc.send_cc_cmdS(0x34)); // get status
+            // Here is where we would try to erase the Flash Information Page:
+            // putchar(cc.WR_CONFIG(0x01)); // Select flash info Page
+            putchar(cc.opcode(0x00)); // NOP
+            // erase the first page of flash:
+            putchar(cc.opcode(0x75, 0xAD, 0x00)); // set Flash Address High
+            // start flash erase
+            putchar(cc.opcode(0x43, 0xAE, 0x01)); // ORL FCTL, #0x01;
+            putchar(cc.opcode(0x00)); // Must always execute a NOP after erase (?)
+            putchar(cc.send_cc_cmdS(0x34)); // get status
+            putchar('.');
+            break;
+        }
+
+        case 'R': {
+            // read a byte from flash (optionally try to read from Flash Information Page)
+            // confirmed to read from CODE memory space
+            // DOES NOT WORK for Flash Information Page :-(
+
+            gpio_put(POWER_PIN, 0);
+            busy_wait_ms(50);
+            gpio_put(POWER_PIN, 1);
+            busy_wait_ms(50);
+            cc.reset_cc();
+            cc.enable_cc_debug();
+
+            // load byte address
+            putchar(cc.opcode(0x90, 0x00, 0x00)); // mov DPTR, 0x0000
+
+            // Here is where we would try to erase the Flash Information Page:
+            // putchar(cc.WR_CONFIG(0x01)); // Select flash info Page
+
+            // read byte
+            putchar(cc.opcode(0xe0)); // MOVX A,@DPTR
+            putchar(cc.send_cc_cmdS(0x34));
+            putchar('.');
+            break;
+        }
+
+        case 'W': {
+            // Write a custom lock byte
+            // copied from case 'l' below
+            gpio_put(POWER_PIN, 0);
+            busy_wait_ms(50);
+            gpio_put(POWER_PIN, 1);
+            busy_wait_ms(50);
+            cc.reset_cc();
+            cc.enable_cc_debug();
+            cc.set_lock_byte(0b00010101);
+            busy_wait_ms(100);
+            cc.reset_cc();
+            cc.enable_cc_debug();
+            cc.opcode(0x00); // execute NOP to update status byte
+            putchar(cc.send_cc_cmdS(0x34));
+            break;
+        }
+
+        // case 'W': { // write first byte to Flash Information Page}
+        //     gpio_put(POWER_PIN, 0);
+        //     busy_wait_ms(50);
+        //     gpio_put(POWER_PIN, 1);
+        //     busy_wait_ms(50);
+        //     cc.reset_cc();
+        //     cc.enable_cc_debug();
+        //     // MOV FWT,#2Ah
+        //     putchar(cc.opcode(0x75, 0xAB, 0x11)); // 0x23 to flash write timing
+        //     putchar(cc.opcode(0xE5, 0xAB)); // read 0xAB
+        //     putchar(cc.opcode(0x75, 0xAC, 0x08)); // set Flash Address Low Byte
+        //     putchar(cc.opcode(0xE5, 0xAC)); // read 0xAC
+        //     putchar(cc.opcode(0x75, 0xAD, 0x00)); // set Flash Address High Byte
+        //     putchar(cc.opcode(0xE5, 0xAD)); // read 0xAD
+        //     putchar(cc.opcode(0xE5, 0xAE)); // read FCTL (0xAE) - Flash Control
+        //     // cc.opcode(0x43, 0xAE, 0b00000010); // begin write
+        //     cc.opcode(0x75, 0xAE, 0x02); // begin write
+        //     cc.opcode(0x00);
+        //     // putchar(cc.opcode(0xE5, 0xAE)); // read AE
+        //     cc.opcode(0x75, 0xAF, 0b10111111); // Flash Write Data
+        //     cc.opcode(0x75, 0xAF, 0b10101010); // Flash Write Data
+        //     cc.opcode(0x75, 0xAF, 0b10101010); // Flash Write Data
+        //     cc.opcode(0x75, 0xAF, 0b10101010); // Flash Write Data
+        //     break;
+        // }
+
         case 'b': { // put in debug mode and get serial number
             gpio_put(POWER_PIN, 0);
             busy_wait_ms(50);
