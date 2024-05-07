@@ -1,4 +1,5 @@
 import serial
+from config import SERIAL_INTERFACE
 
 # This script reads the serial number and status from the board
 # Also used to check how reliable the communication is, without glitching
@@ -6,7 +7,7 @@ import serial
 s = 0
 f = 0
 statusmapping = {0xb6: "locked", 0xb2: "unlocked"}
-with serial.Serial('/dev/ttyACM0', 115200) as ser:
+with serial.Serial(SERIAL_INTERFACE, 115200) as ser:
     while True:
         ser.write(b'b')
         response = ser.read(4)

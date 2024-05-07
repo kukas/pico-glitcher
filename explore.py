@@ -5,6 +5,7 @@ import sys
 from collections import Counter
 import datetime
 import struct
+from config import SERIAL_INTERFACE
 
 # glitch calculated at 130 and 690 us
 
@@ -119,7 +120,7 @@ if __name__ == '__main__':
 
     signal.signal(signal.SIGINT, signal_handler)
 
-    with serial.Serial('/dev/ttyACM0', 115200) as ser:
+    with serial.Serial(SERIAL_INTERFACE, 115200) as ser:
         ser.write(b's')
         glitch_size_bytes = int(ser.read_until(b'.')[:-1]) * 4
         print(f'Glitch buffer size = {glitch_size_bytes}')

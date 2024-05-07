@@ -1,8 +1,9 @@
 import serial
+from config import SERIAL_INTERFACE
 
 # This script will write a pre-defined pattern to an unlocked microcontroller
 
-with serial.Serial('/dev/ttyACM0', 115200) as ser:
+with serial.Serial(SERIAL_INTERFACE, 115200) as ser:
     input("Do you really want to write?")
     ser.write(b'b')
     response = ser.read(4)

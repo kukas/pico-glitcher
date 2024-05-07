@@ -3,10 +3,11 @@ import time
 import signal
 import sys
 import struct
+from config import SERIAL_INTERFACE
 
 # This script will wipe the microcontroller, re-enabling the debug interface
 
-with serial.Serial('/dev/ttyACM0', 115200) as ser:
+with serial.Serial(SERIAL_INTERFACE, 115200) as ser:
     ser.write(b'b')
     response = ser.read(4)
     print(response)
