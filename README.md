@@ -1,5 +1,9 @@
 # Pico-glitcher
 
+Pico-glitcher is a set of tools used to perform a voltage glitching attack on CCxxxx Texas Instruments wireless chips. The attack can overcome a debugging lock check and allows the attacker to dump the device firmware from a locked chip. 
+
+I reproduced the findings from the original blogpost about this vulnerability (https://zeus.ugent.be/blog/22-23/reverse_engineering_epaper/) and added some improvements to the code.
+
 ## Fork information
 
 In this fork, I reproduced Jaspers voltage glitching experiments on CC2510 and I extended the pico-glitcher functionality.
@@ -34,8 +38,10 @@ As this was the first time doing the crowbar attack, I was not completely sure a
 
 My glitch positions were quite different to Jaspers. To quickly find the right position, I recommend using a voltage analyzer and tuning the position parameter so that the glitch locations match approximately Jaspers logic analyzer trace:
 ![View of the debug sequence on a logic analyser. Orange lines separate the different debug instructions, red lines are the timings of the glitches](https://pics.zeus.gent/db5veC76CU7sK4k0m9W86zcwVybp01DvG5x8ARIx.png)
-This 
 
+## Successful attack
+
+I successfully dumped firmware from two devices using this method. The firmware download took around 10 hours to complete for each attempt.
 
 ## Original README:
 
