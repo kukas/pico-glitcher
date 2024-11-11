@@ -1,8 +1,11 @@
 # Pico-glitcher
 
-Pico-glitcher is a set of tools used to perform a voltage glitching attack on CCxxxx Texas Instruments wireless chips. The attack can overcome a debugging lock check and allows the attacker to dump the device firmware from a locked chip. 
+![2024-04-24-21-50-46-538](https://github.com/user-attachments/assets/e14faa53-ffcb-4fcf-bea4-1d29d3760d72)
+[click here to see the voltage glitching in progress :-)](https://github.com/user-attachments/assets/83b4dde9-f6ae-445b-a65e-2d5682e1be58)
 
-I reproduced the findings from the original blogpost about this vulnerability (https://zeus.ugent.be/blog/22-23/reverse_engineering_epaper/) and added some improvements to the code.
+Pico-glitcher is a set of tools used to perform a voltage glitching attack on CCxxxx Texas Instruments wireless chips. The attack can overcome a debugging lock check and allows the attacker to dump the device firmware from a locked chip.
+
+I reproduced the findings from the [original blogpost](https://zeus.ugent.be/blog/22-23/reverse_engineering_epaper/) about this vulnerability  and added some improvements to the code.
 
 ## Fork information
 
